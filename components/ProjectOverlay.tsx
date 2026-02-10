@@ -20,6 +20,11 @@ const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex,
   // Use only gallery images for the slideshow (no separate hero slide)
   const allImages = category ? category.gallery : [];
 
+  const current = allImages[currentIndex];
+  const isVideo =
+    !!current &&
+    (current.mediaType === 'video' || /\.mp4$/i.test(current.url));
+
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (currentIndex < allImages.length - 1) setCurrentIndex(prev => prev + 1);
@@ -68,11 +73,12 @@ const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex,
             className="relative w-full h-[80vh] flex items-center justify-center cursor-zoom-in md:cursor-zoom-in"
             ref={imageContainerRef}
             onClick={(e) => {
+              if (isVideo) return;
               e.stopPropagation();
               setIsZoomed((prev) => !prev);
             }}
             onMouseMove={(e) => {
-              if (!imageContainerRef.current || !isZoomed) return;
+              if (!imageContainerRef.current || !isZoomed || isVideo) return;
 
               const rect = imageContainerRef.current.getBoundingClientRect();
               const x = e.clientX - rect.left;
@@ -84,21 +90,33 @@ const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex,
               setZoomOrigin(`${xPercent}% ${yPercent}%`);
             }}
           >
-            {/* Magnifying glass icon hint (desktop) */}
-            <div className="hidden md:flex absolute top-6 right-6 items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 text-xs tracking-[0.2em] uppercase text-white/80 backdrop-blur-sm pointer-events-none">
-              <Search className="w-3.5 h-3.5" />
-              <span>Zoom</span>
-            </div>
+            {isVideo ? (
+              <video
+                src={current?.url}
+                controls
+                autoPlay
+                playsInline
+                className="max-w-full max-h-full object-contain shadow-2xl"
+              />
+            ) : (
+              <>
+                {/* Magnifying glass icon hint (desktop) */}
+                <div className="hidden md:flex absolute top-6 right-6 items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 text-xs tracking-[0.2em] uppercase text-white/80 backdrop-blur-sm pointer-events-none">
+                  <Search className="w-3.5 h-3.5" />
+                  <span>Zoom</span>
+                </div>
 
-            <img 
-              src={allImages[currentIndex].url} 
-              alt={allImages[currentIndex].title} 
-              className="max-w-full max-h-full object-contain shadow-2xl transition-transform duration-300 ease-out md:pointer-events-auto"
-              style={{
-                transform: isZoomed ? 'scale(1.6)' : 'scale(1)',
-                transformOrigin: zoomOrigin,
-              }}
-            />
+                <img
+                  src={current?.url}
+                  alt={current?.title}
+                  className="max-w-full max-h-full object-contain shadow-2xl transition-transform duration-300 ease-out md:pointer-events-auto"
+                  style={{
+                    transform: isZoomed ? 'scale(1.6)' : 'scale(1)',
+                    transformOrigin: zoomOrigin,
+                  }}
+                />
+              </>
+            )}
           </motion.div>
 
           <div className="mt-6 text-center space-y-1">

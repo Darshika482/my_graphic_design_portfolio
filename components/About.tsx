@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { SectionId } from '../types';
+import myPhoto from '../assets/my1.jpg';
 
 const About: React.FC = () => {
   const skills = [
@@ -21,7 +22,7 @@ const About: React.FC = () => {
           className="relative"
         >
            <div className="aspect-[4/5] bg-stone-300 overflow-hidden relative shadow-xl">
-             <img src="https://picsum.photos/seed/darshika/800/1000" alt="Darshika Jain" className="w-full h-full object-cover grayscale contrast-125" />
+             <img src={myPhoto} alt="Darshika Jain portrait" className="w-full h-full object-cover" />
              <div className="absolute inset-0 ring-1 ring-inset ring-black/10"></div>
            </div>
            {/* Decorative elements */}

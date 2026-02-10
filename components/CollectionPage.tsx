@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
 import { Category } from '../types';
 import ProjectOverlay from './ProjectOverlay';
 
@@ -10,6 +10,12 @@ interface CollectionPageProps {
   previousCategory?: Category | null;
   nextCategory?: Category | null;
   onNavigateCollection?: (category: Category) => void;
+}
+
+interface ImageDimensions {
+  width: number;
+  height: number;
+  ratio: number;
 }
 
 const CollectionPage: React.FC<CollectionPageProps> = ({
@@ -22,23 +28,95 @@ const CollectionPage: React.FC<CollectionPageProps> = ({
   const [overlayCategory, setOverlayCategory] = useState<Category | null>(null);
   const [overlayIndex, setOverlayIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  const [imageDimensions, setImageDimensions] = useState<Map<string, ImageDimensions>>(new Map());
+  const [columnCount, setColumnCount] = useState(4);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to top when page opens
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
-  const allImages = (() => {
-    const combined = [
-      { id: 'hero', url: category.heroImage, title: category.title },
-      ...category.gallery,
-    ];
-    const seen = new Set<string>();
-    return combined.filter(img => {
-      if (seen.has(img.url)) return false;
-      seen.add(img.url);
-      return true;
+  // Responsive column count
+  useEffect(() => {
+    const updateColumns = () => {
+      const w = window.innerWidth;
+      if (w < 480) setColumnCount(1);
+      else if (w < 768) setColumnCount(2);
+      else if (w < 1280) setColumnCount(3);
+      else setColumnCount(4);
+    };
+    updateColumns();
+    window.addEventListener('resize', updateColumns);
+    return () => window.removeEventListener('resize', updateColumns);
+  }, []);
+
+  const allImages = category.gallery;
+
+  // Preload images to get natural dimensions
+  useEffect(() => {
+    allImages.forEach(image => {
+      if (imageDimensions.has(image.id)) return;
+
+      const isVideo = image.mediaType === 'video' || /\.mp4$/i.test(image.url);
+
+      if (isVideo) {
+        const video = document.createElement('video');
+        video.onloadedmetadata = () => {
+          setImageDimensions(prev => {
+            const next = new Map(prev);
+            next.set(image.id, {
+              width: video.videoWidth || 16,
+              height: video.videoHeight || 9,
+              ratio: (video.videoHeight || 9) / (video.videoWidth || 16),
+            });
+            return next;
+          });
+          setLoadedImages(prev => new Set(prev).add(image.id));
+        };
+        video.src = image.url;
+      } else {
+        const img = new Image();
+        img.onload = () => {
+          setImageDimensions(prev => {
+            const next = new Map(prev);
+            next.set(image.id, {
+              width: img.naturalWidth,
+              height: img.naturalHeight,
+              ratio: img.naturalHeight / img.naturalWidth,
+            });
+            return next;
+          });
+          setLoadedImages(prev => new Set(prev).add(image.id));
+        };
+        img.src = image.url;
+      }
     });
+  }, [allImages]);
+
+  // Shortest-column distribution (Pinterest algorithm)
+  const columns = (() => {
+    const cols: { items: { image: typeof allImages[0]; index: number }[]; height: number }[] =
+      Array.from({ length: columnCount }, () => ({ items: [], height: 0 }));
+
+    allImages.forEach((image, index) => {
+      const dims = imageDimensions.get(image.id);
+      const ratio = dims ? dims.ratio : 1.2;
+
+      // Place in the shortest column
+      let shortestIdx = 0;
+      let shortestHeight = cols[0].height;
+      for (let i = 1; i < cols.length; i++) {
+        if (cols[i].height < shortestHeight) {
+          shortestIdx = i;
+          shortestHeight = cols[i].height;
+        }
+      }
+
+      cols[shortestIdx].items.push({ image, index });
+      cols[shortestIdx].height += ratio;
+    });
+
+    return cols;
   })();
 
   const handleImageClick = (index: number) => {
@@ -52,9 +130,7 @@ const CollectionPage: React.FC<CollectionPageProps> = ({
     document.body.style.overflow = 'unset';
   };
 
-  const handleImageLoad = (id: string) => {
-    setLoadedImages(prev => new Set(prev).add(id));
-  };
+  const gap = columnCount <= 2 ? 10 : 16;
 
   return (
     <>
@@ -82,41 +158,68 @@ const CollectionPage: React.FC<CollectionPageProps> = ({
           </div>
         </div>
 
-        {/* Masonry Grid */}
+        {/* Masonry Grid — shortest-column layout */}
         <div className="max-w-[1800px] mx-auto px-4 md:px-6 py-8 md:py-12">
-          <div className="masonry-grid">
-            {allImages.map((image, index) => (
-              <motion.div
-                key={image.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.06 }}
-                className="masonry-item"
+          <div
+            ref={containerRef}
+            className="flex items-start"
+            style={{ gap: `${gap}px` }}
+          >
+            {columns.map((col, colIdx) => (
+              <div
+                key={colIdx}
+                className="flex-1 min-w-0 flex flex-col"
+                style={{ gap: `${gap}px` }}
               >
-                <div
-                  onClick={() => handleImageClick(index)}
-                  className="group relative cursor-pointer overflow-hidden rounded-lg bg-stone-100"
-                >
-                  <img
-                    src={image.url}
-                    alt={image.title}
-                    loading="lazy"
-                    decoding="async"
-                    onLoad={() => handleImageLoad(image.id)}
-                    className={`w-full h-auto block transition-all duration-500 ease-out group-hover:scale-[1.03] ${loadedImages.has(image.id) ? 'opacity-100' : 'opacity-0'
-                      }`}
-                  />
-                  {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
-                    <p className="text-white text-sm font-medium tracking-wide">{image.title}</p>
-                  </div>
-                  {/* Loading skeleton */}
-                  {!loadedImages.has(image.id) && (
-                    <div className="absolute inset-0 bg-stone-200 animate-pulse" />
-                  )}
-                </div>
-              </motion.div>
+                {col.items.map(({ image, index }) => {
+                  const dims = imageDimensions.get(image.id);
+                  return (
+                    <motion.div
+                      key={image.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.04 }}
+                    >
+                      <div
+                        onClick={() => handleImageClick(index)}
+                        className="group relative cursor-pointer overflow-hidden rounded-lg bg-stone-100"
+                        style={dims ? { aspectRatio: `${dims.width} / ${dims.height}` } : undefined}
+                      >
+                        {image.mediaType === 'video' || /\.mp4$/i.test(image.url) ? (
+                          <video
+                            src={image.url}
+                            muted
+                            loop
+                            autoPlay
+                            playsInline
+                            className={`w-full h-full object-cover block transition-all duration-500 ease-out group-hover:scale-[1.03] ${loadedImages.has(image.id) ? 'opacity-100' : 'opacity-0'
+                              }`}
+                            onLoadedMetadata={() => {
+                              setLoadedImages(prev => new Set(prev).add(image.id));
+                            }}
+                          />
+                        ) : (
+                          <img
+                            src={image.url}
+                            alt={image.title}
+                            loading="lazy"
+                            decoding="async"
+                            className={`w-full h-full object-cover block transition-all duration-500 ease-out group-hover:scale-[1.03] ${loadedImages.has(image.id) ? 'opacity-100' : 'opacity-0'
+                              }`}
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+                          <p className="text-white text-sm font-medium tracking-wide">{image.title}</p>
+                        </div>
+                        {!loadedImages.has(image.id) && (
+                          <div className="absolute inset-0 bg-stone-200 animate-pulse" style={{ minHeight: '200px' }} />
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
             ))}
           </div>
         </div>
@@ -164,7 +267,6 @@ const CollectionPage: React.FC<CollectionPageProps> = ({
         </div>
       </motion.div>
 
-      {/* Slideshow Overlay */}
       {overlayCategory && (
         <ProjectOverlay
           category={overlayCategory}

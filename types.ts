@@ -3,6 +3,7 @@ export interface ProjectImage {
   url: string;
   title: string;
   link?: string;
+  mediaType?: 'image' | 'video';
 }
 
 export interface Category {
