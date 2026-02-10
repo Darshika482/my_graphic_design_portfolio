@@ -6,10 +6,19 @@ import ProjectOverlay from './ProjectOverlay';
 
 interface CollectionPageProps {
   category: Category;
-  onBack: () => void;
+  onBack: (categoryId: string) => void;
+  previousCategory?: Category | null;
+  nextCategory?: Category | null;
+  onNavigateCollection?: (category: Category) => void;
 }
 
-const CollectionPage: React.FC<CollectionPageProps> = ({ category, onBack }) => {
+const CollectionPage: React.FC<CollectionPageProps> = ({
+  category,
+  onBack,
+  previousCategory,
+  nextCategory,
+  onNavigateCollection,
+}) => {
   const [overlayCategory, setOverlayCategory] = useState<Category | null>(null);
   const [overlayIndex, setOverlayIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
@@ -60,7 +69,7 @@ const CollectionPage: React.FC<CollectionPageProps> = ({ category, onBack }) => 
         <div className="sticky top-0 z-40 bg-stone-50/80 backdrop-blur-lg border-b border-stone-200/60">
           <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center gap-6">
             <button
-              onClick={onBack}
+              onClick={() => onBack(category.id)}
               className="group flex items-center gap-2 text-stone-500 hover:text-accent transition-colors duration-300"
             >
               <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" />
@@ -113,14 +122,45 @@ const CollectionPage: React.FC<CollectionPageProps> = ({ category, onBack }) => 
         </div>
 
         {/* Footer */}
-        <div className="text-center py-12 border-t border-stone-200/60">
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-2 text-stone-500 hover:text-accent transition-colors text-sm uppercase tracking-wider font-medium"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Portfolio
-          </button>
+        <div className="py-12 border-t border-stone-200/60">
+          <div className="max-w-[1800px] mx-auto px-6 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-3 md:flex-row md:gap-6">
+              {previousCategory && onNavigateCollection && (
+                <button
+                  onClick={() => onNavigateCollection(previousCategory)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-stone-300 bg-white/70 text-xs md:text-sm uppercase tracking-wider font-medium text-stone-600 shadow-sm hover:bg-stone-900 hover:text-white hover:border-stone-900 transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span className="whitespace-nowrap">
+                    Previous: <span className="font-serif normal-case">{previousCategory.title}</span>
+                  </span>
+                </button>
+              )}
+            </div>
+
+            <div className="text-center order-first md:order-none">
+              <button
+                onClick={() => onBack(category.id)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-stone-300 bg-white/70 text-xs md:text-sm uppercase tracking-wider font-medium text-stone-600 shadow-sm hover:bg-stone-900 hover:text-white hover:border-stone-900 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Portfolio
+              </button>
+            </div>
+
+            <div className="flex justify-end">
+              {nextCategory && onNavigateCollection && (
+                <button
+                  onClick={() => onNavigateCollection(nextCategory)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-stone-300 bg-white/70 text-xs md:text-sm uppercase tracking-wider font-medium text-stone-600 shadow-sm hover:bg-stone-900 hover:text-white hover:border-stone-900 transition-colors"
+                >
+                  <span className="whitespace-nowrap">
+                    Next: <span className="font-serif normal-case">{nextCategory.title}</span>
+                  </span>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </motion.div>
 

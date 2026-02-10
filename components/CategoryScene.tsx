@@ -37,7 +37,11 @@ const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject, 
   }, [heroImages.length]);
 
   return (
-    <section ref={containerRef} className="relative min-h-screen py-24 md:py-32 flex flex-col justify-center overflow-hidden border-t border-stone-200">
+    <section
+      id={category.id}
+      ref={containerRef}
+      className="relative min-h-screen py-24 md:py-32 flex flex-col justify-center overflow-hidden border-t border-stone-200"
+    >
       <motion.div
         className="container mx-auto px-6 h-full flex flex-col md:flex-row items-center gap-12 md:gap-24"
       >
@@ -57,7 +61,8 @@ const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject, 
 
           <div className="pt-4 flex flex-col space-y-4">
             <button
-              onClick={() => onViewCollection ? onViewCollection(category) : onOpenProject(category, -1)}
+              // Open collection starting from the first gallery image
+              onClick={() => onViewCollection ? onViewCollection(category) : onOpenProject(category, 0)}
               className="group flex items-center justify-between w-full p-4 bg-white border border-stone-200 hover:border-accent hover:shadow-lg transition-all duration-300"
             >
               <span className="text-sm uppercase tracking-wider font-medium text-stone-900 group-hover:text-accent">View Collection</span>
@@ -82,10 +87,11 @@ const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject, 
 
         {/* Right/Bottom Hero Image */}
         <div className="w-full md:w-2/3 relative order-1 md:order-2">
-          <motion.div
+            <motion.div
             style={{ y: yHero }}
             className="relative w-full h-[70vh] bg-stone-100 shadow-2xl overflow-hidden cursor-pointer"
-            onClick={() => onOpenProject(category, -1)}
+            // Clicking hero also opens overlay at first gallery image
+            onClick={() => onOpenProject(category, 0)}
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.5 }}
           >

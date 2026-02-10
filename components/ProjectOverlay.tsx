@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Search, ArrowUpRight } from 'lucide-react';
 import { Category } from '../types';
 
 interface ProjectOverlayProps {
@@ -10,17 +10,15 @@ interface ProjectOverlayProps {
 }
 
 const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex, onClose }) => {
-  const [currentIndex, setCurrentIndex] = React.useState(initialIndex === -1 ? 0 : initialIndex);
+  const [currentIndex, setCurrentIndex] = React.useState(initialIndex);
 
   // Professional zoom (desktop): click to toggle zoom, cursor sets zoom origin
   const [isZoomed, setIsZoomed] = React.useState(false);
   const [zoomOrigin, setZoomOrigin] = React.useState('50% 50%');
   const imageContainerRef = React.useRef<HTMLDivElement | null>(null);
 
-  // Combine hero and gallery for the slideshow
-  const allImages = category 
-    ? [{ id: 'hero', url: category.heroImage, title: category.title }, ...category.gallery] 
-    : [];
+  // Use only gallery images for the slideshow (no separate hero slide)
+  const allImages = category ? category.gallery : [];
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -104,10 +102,25 @@ const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex,
           </motion.div>
 
           <div className="mt-6 text-center space-y-1">
-            <h3 className="text-white text-2xl font-serif">{allImages[currentIndex].title}</h3>
+            <h3 className="text-white text-2xl font-serif">{allImages[currentIndex]?.title}</h3>
             <p className="text-stone-400 text-sm tracking-widest uppercase">
-              {currentIndex === 0 ? 'Hero Image' : `Gallery Image ${currentIndex} / ${allImages.length - 1}`}
+              {`Gallery Image ${currentIndex + 1} / ${allImages.length}`}
             </p>
+            
+            {/* External link button for images that have a link (e.g. books on Drive) */}
+            {allImages[currentIndex] && 'link' in allImages[currentIndex] && allImages[currentIndex].link && (
+              <div className="pt-4">
+                <a
+                  href={allImages[currentIndex].link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/40 text-xs tracking-[0.25em] uppercase text-white hover:bg-white hover:text-stone-900 transition-colors"
+                >
+                  <span>Link</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Navigation Controls */}

@@ -17,6 +17,29 @@ import pbOld6 from './assets/old poster/Entrepreneurship.png';
 import pbOld7 from './assets/old poster/event.png';
 import pbOld8 from './assets/old poster/independence day.png';
 
+// Children book design assets
+import cbSecret0 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-0.jpg';
+import cbSecret1 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-1.jpg';
+import cbSecret2 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-2.jpg';
+import cbSecret3 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-3.jpg';
+import cbSecret4 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-4.jpg';
+import cbSecret5 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-5.jpg';
+import cbSecret6 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-6.jpg';
+import cbSecret7 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-7.jpg';
+import cbSecret8 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-8.jpg';
+import cbSecret9 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-9.jpg';
+import cbSecret10 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-10.jpg';
+import cbSecret11 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-11.jpg';
+import cbSecret12 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-12.jpg';
+import cbSecret13 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-13.jpg';
+import cbSecret14 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-14.jpg';
+import cbSecret15 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-15.jpg';
+import cbSecret16 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-16.jpg';
+import cbSecret17 from './assets/books/The Secret of Whispering Woods A Meadow Mist Adventure/The Secret of Whispering Woods A Meadow Mist Adventure-images-17.jpg';
+
+import cbStudentPlanner from './assets/books/student planner/ADHD panner cover.jpg';
+import cbMaxSpace from './assets/books/Max’s Space Journey/Max’s Space Journey (1).jpg';
+
 export const NAV_LINKS = [
   { label: 'Home', href: '#home' },
   { label: 'Work', href: '#work' },
@@ -57,13 +80,47 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: 'academic-book',
-    title: 'Academic & Book Design',
-    description: 'Structured layouts and typographic systems for educational publishing.',
-    heroImage: 'https://picsum.photos/seed/bookhero/1600/1200',
+    title: 'Children Book Designs',
+    description: 'Playful, engaging layouts crafted for young readers and early learners.',
+    heroImage: cbSecret0,
     gallery: [
-      { id: 'ab1', title: 'Math Textbook Layout', url: 'https://picsum.photos/seed/book1/1000/1400' },
-      { id: 'ab2', title: 'Science Journal', url: 'https://picsum.photos/seed/book2/1000/1400' },
-      { id: 'ab3', title: 'University Prospectus', url: 'https://picsum.photos/seed/book3/1000/1400' },
+      // First three: different books
+      { 
+        id: 'cb1',
+        title: 'The Secret of Whispering Woods – Cover',
+        url: cbSecret0
+      },
+      { 
+        id: 'cb2',
+        title: 'ADHD Student Planner – Cover',
+        url: cbStudentPlanner,
+        link: 'https://drive.google.com/file/d/1DFnwE_HWaMF3SVq-EZoo2w8RdiH2cKET/view?usp=sharing'
+      },
+      { 
+        id: 'cb3',
+        title: "Max’s Space Journey – Cover",
+        url: cbMaxSpace,
+        link: 'https://drive.google.com/file/d/1AYtKEJ0J2y-5t7p9z5QXlcGtosQViDUo/view?usp=sharing'
+      },
+
+      // Then full sequence of Secret of Whispering Woods pages
+      { id: 'cb4', title: 'The Secret of Whispering Woods – Page 1', url: cbSecret1 },
+      { id: 'cb5', title: 'The Secret of Whispering Woods – Page 2', url: cbSecret2 },
+      { id: 'cb6', title: 'The Secret of Whispering Woods – Page 3', url: cbSecret3 },
+      { id: 'cb7', title: 'The Secret of Whispering Woods – Page 4', url: cbSecret4 },
+      { id: 'cb8', title: 'The Secret of Whispering Woods – Page 5', url: cbSecret5 },
+      { id: 'cb9', title: 'The Secret of Whispering Woods – Page 6', url: cbSecret6 },
+      { id: 'cb10', title: 'The Secret of Whispering Woods – Page 7', url: cbSecret7 },
+      { id: 'cb11', title: 'The Secret of Whispering Woods – Page 8', url: cbSecret8 },
+      { id: 'cb12', title: 'The Secret of Whispering Woods – Page 9', url: cbSecret9 },
+      { id: 'cb13', title: 'The Secret of Whispering Woods – Page 10', url: cbSecret10 },
+      { id: 'cb14', title: 'The Secret of Whispering Woods – Page 11', url: cbSecret11 },
+      { id: 'cb15', title: 'The Secret of Whispering Woods – Page 12', url: cbSecret12 },
+      { id: 'cb16', title: 'The Secret of Whispering Woods – Page 13', url: cbSecret13 },
+      { id: 'cb17', title: 'The Secret of Whispering Woods – Page 14', url: cbSecret14 },
+      { id: 'cb18', title: 'The Secret of Whispering Woods – Page 15', url: cbSecret15 },
+      { id: 'cb19', title: 'The Secret of Whispering Woods – Page 16', url: cbSecret16 },
+      { id: 'cb20', title: 'The Secret of Whispering Woods – Page 17', url: cbSecret17 },
     ]
   },
   {

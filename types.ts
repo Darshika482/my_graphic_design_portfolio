@@ -2,6 +2,7 @@ export interface ProjectImage {
   id: string;
   url: string;
   title: string;
+  link?: string;
 }
 
 export interface Category {
