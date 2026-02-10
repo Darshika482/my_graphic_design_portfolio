@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { SectionId } from '../types';
-import myPhoto from '../assets/my1.jpg';
+import myPhoto from '../assets/my2.jpg';
 
 const About: React.FC = () => {
   const skills = [
