@@ -6,9 +6,10 @@ import { Category, SectionId } from '../types';
 
 interface WorkSectionProps {
   onOverlayToggle?: (isOpen: boolean) => void;
+  onViewCollection?: (category: Category) => void;
 }
 
-const WorkSection: React.FC<WorkSectionProps> = ({ onOverlayToggle }) => {
+const WorkSection: React.FC<WorkSectionProps> = ({ onOverlayToggle, onViewCollection }) => {
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [initialImageIndex, setInitialImageIndex] = useState(0);
 
@@ -33,18 +34,19 @@ const WorkSection: React.FC<WorkSectionProps> = ({ onOverlayToggle }) => {
       </div>
 
       {CATEGORIES.map((category) => (
-        <CategoryScene 
-          key={category.id} 
-          category={category} 
-          onOpenProject={handleOpenProject} 
+        <CategoryScene
+          key={category.id}
+          category={category}
+          onOpenProject={handleOpenProject}
+          onViewCollection={onViewCollection}
         />
       ))}
 
       {activeCategory && (
-        <ProjectOverlay 
-          category={activeCategory} 
-          initialIndex={initialImageIndex} 
-          onClose={handleCloseProject} 
+        <ProjectOverlay
+          category={activeCategory}
+          initialIndex={initialImageIndex}
+          onClose={handleCloseProject}
         />
       )}
     </div>

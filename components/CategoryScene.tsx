@@ -6,12 +6,15 @@ import { ArrowUpRight } from 'lucide-react';
 interface CategorySceneProps {
   category: Category;
   onOpenProject: (cat: Category, index: number) => void;
+  onViewCollection?: (cat: Category) => void;
 }
 
-const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject }) => {
+const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject, onViewCollection }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [heroIndex, setHeroIndex] = useState(0);
-  const heroImages = [category.heroImage, ...category.gallery.map((img) => img.url)];
+  const heroImages = Array.from(
+    new Set([category.heroImage, ...category.gallery.map((img) => img.url)])
+  );
 
   // Create a scroll-linked animation for the parallax effect within this section
   const { scrollYProgress } = useScroll({
@@ -54,7 +57,7 @@ const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject }
 
           <div className="pt-4 flex flex-col space-y-4">
             <button
-              onClick={() => onOpenProject(category, -1)} // -1 indicates Hero
+              onClick={() => onViewCollection ? onViewCollection(category) : onOpenProject(category, -1)}
               className="group flex items-center justify-between w-full p-4 bg-white border border-stone-200 hover:border-accent hover:shadow-lg transition-all duration-300"
             >
               <span className="text-sm uppercase tracking-wider font-medium text-stone-900 group-hover:text-accent">View Collection</span>
