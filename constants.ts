@@ -1,11 +1,24 @@
 import { Category, ProjectImage } from './types';
 
+// ── Thumbnail modules (tiny ~1KB WebP blur placeholders, always eager) ──────
+const thumbModules: Record<string, { default: string }> = {
+  ...import.meta.glob('./assets/**/*_thumb.webp', { eager: true }) as Record<string, { default: string }>,
+};
+
+/** Look up the thumbnail URL for a given full-size image path. */
+function findThumb(fullPath: string): string | undefined {
+  const withoutExt = fullPath.replace(/\.[^/.]+$/, '');
+  const thumbKey = `${withoutExt}_thumb.webp`;
+  return thumbModules[thumbKey]?.default;
+}
+
 // Helper to turn Vite glob imports into a gallery array.
 function createImageGallery(
   modules: Record<string, { default: string }>,
   options: { idPrefix: string; titlePrefix?: string }
 ): ProjectImage[] {
   return Object.entries(modules)
+    .filter(([path]) => !path.includes('_thumb'))
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([path, mod], index) => {
       const fileName = path.split('/').pop() || `image-${index + 1}`;
@@ -20,6 +33,7 @@ function createImageGallery(
         id: `${options.idPrefix}-${index + 1}`,
         title,
         url: mod.default,
+        thumbnail: findThumb(path),
       };
     });
 }
@@ -55,6 +69,7 @@ const secretBookModules = import.meta.glob(
 ) as Record<string, { default: string }>;
 
 const secretBookGallery: ProjectImage[] = Object.entries(secretBookModules)
+  .filter(([path]) => !path.includes('_thumb'))
   .sort(([a], [b]) => a.localeCompare(b))
   .map(([path, mod], index) => {
     const isCover = /images-0\./.test(path);
@@ -66,6 +81,7 @@ const secretBookGallery: ProjectImage[] = Object.entries(secretBookModules)
         ? 'The Secret of Whispering Woods – Cover'
         : `The Secret of Whispering Woods – Page ${pageNumber - 1}`,
       url: mod.default,
+      thumbnail: findThumb(path),
     };
   });
 
@@ -78,12 +94,16 @@ const studentPlannerModules = import.meta.glob(
 ) as Record<string, { default: string }>;
 
 const maxSpaceModules = import.meta.glob(
-  "./assets/books/Max’s Space Journey/*.{png,jpg,jpeg,webp}",
+  "./assets/books/Max's Space Journey/*.{png,jpg,jpeg,webp}",
   { eager: true }
 ) as Record<string, { default: string }>;
 
-const studentPlannerCover = Object.values(studentPlannerModules)[0]?.default ?? '';
-const maxSpaceCover = Object.values(maxSpaceModules)[0]?.default ?? '';
+const studentPlannerEntries = Object.entries(studentPlannerModules).filter(([p]) => !p.includes('_thumb'));
+const studentPlannerCover = studentPlannerEntries[0]?.[1]?.default ?? '';
+const studentPlannerThumb = findThumb(studentPlannerEntries[0]?.[0] ?? '');
+const maxSpaceEntries = Object.entries(maxSpaceModules).filter(([p]) => !p.includes('_thumb'));
+const maxSpaceCover = maxSpaceEntries[0]?.[1]?.default ?? '';
+const maxSpaceThumb = findThumb(maxSpaceEntries[0]?.[0] ?? '');
 
 // Infographics & Presentation assets (auto-load every image in folder)
 const infographicModules = import.meta.glob(
@@ -131,6 +151,7 @@ const websiteModules = import.meta.glob(
 ) as Record<string, { default: string }>;
 
 const websiteGallery: ProjectImage[] = Object.entries(websiteModules)
+  .filter(([path]) => !path.includes('_thumb'))
   .sort(([a], [b]) => a.localeCompare(b))
   .map(([path, mod], index) => {
     const fileName = path.split('/').pop() || `media-${index + 1}`;
@@ -142,6 +163,7 @@ const websiteGallery: ProjectImage[] = Object.entries(websiteModules)
       title: baseName.replace(/[-_]/g, ' '),
       url: mod.default,
       mediaType: isVideo ? 'video' : 'image',
+      thumbnail: isVideo ? undefined : findThumb(path),
     };
   });
 
@@ -185,19 +207,22 @@ export const CATEGORIES: Category[] = [
       {
         id: 'cb1',
         title: 'The Secret of Whispering Woods – Cover',
-        url: secretBookHeroImage
+        url: secretBookHeroImage,
+        thumbnail: secretBookGallery[0]?.thumbnail,
       },
       {
         id: 'cb2',
         title: 'ADHD Student Planner – Cover',
         url: studentPlannerCover,
-        link: 'https://drive.google.com/file/d/1DFnwE_HWaMF3SVq-EZoo2w8RdiH2cKET/view?usp=sharing'
+        link: 'https://drive.google.com/file/d/1DFnwE_HWaMF3SVq-EZoo2w8RdiH2cKET/view?usp=sharing',
+        thumbnail: studentPlannerThumb,
       },
       {
         id: 'cb3',
-        title: "Max’s Space Journey – Cover",
+        title: "Max's Space Journey – Cover",
         url: maxSpaceCover,
-        link: 'https://drive.google.com/file/d/1AYtKEJ0J2y-5t7p9z5QXlcGtosQViDUo/view?usp=sharing'
+        link: 'https://drive.google.com/file/d/1AYtKEJ0J2y-5t7p9z5QXlcGtosQViDUo/view?usp=sharing',
+        thumbnail: maxSpaceThumb,
       },
       // Then full sequence of Secret of Whispering Woods pages (auto-loaded)
       ...secretBookGallery.slice(1),

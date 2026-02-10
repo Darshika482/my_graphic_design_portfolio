@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Category } from '../types';
 import ProjectOverlay from './ProjectOverlay';
+import OptimizedImage from './OptimizedImage';
 
 interface CollectionPageProps {
   category: Category;
@@ -52,7 +53,7 @@ const CollectionPage: React.FC<CollectionPageProps> = ({
 
   const allImages = category.gallery;
 
-  // Preload images to get natural dimensions
+  // Load dimensions from thumbnails (fast) or videos
   useEffect(() => {
     allImages.forEach(image => {
       if (imageDimensions.has(image.id)) return;
@@ -75,20 +76,22 @@ const CollectionPage: React.FC<CollectionPageProps> = ({
         };
         video.src = image.url;
       } else {
-        const img = new Image();
-        img.onload = () => {
+        // Use thumbnail for fast dimension detection (tiny file)
+        const imgEl = new window.Image();
+        const srcForDims = image.thumbnail || image.url;
+        imgEl.onload = () => {
           setImageDimensions(prev => {
             const next = new Map(prev);
             next.set(image.id, {
-              width: img.naturalWidth,
-              height: img.naturalHeight,
-              ratio: img.naturalHeight / img.naturalWidth,
+              width: imgEl.naturalWidth,
+              height: imgEl.naturalHeight,
+              ratio: imgEl.naturalHeight / imgEl.naturalWidth,
             });
             return next;
           });
           setLoadedImages(prev => new Set(prev).add(image.id));
         };
-        img.src = image.url;
+        imgEl.src = srcForDims;
       }
     });
   }, [allImages]);
@@ -265,22 +268,17 @@ const CollectionPage: React.FC<CollectionPageProps> = ({
                             }}
                           />
                         ) : (
-                          <img
+                          <OptimizedImage
                             src={image.url}
+                            thumbnail={image.thumbnail}
                             alt={image.title}
-                            loading="lazy"
-                            decoding="async"
-                            className={`w-full h-full object-cover block transition-all duration-500 ease-out group-hover:scale-[1.03] ${loadedImages.has(image.id) ? 'opacity-100' : 'opacity-0'
-                              }`}
+                            className={`w-full h-full object-cover block transition-all duration-500 ease-out group-hover:scale-[1.03]`}
                           />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                         <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
                           <p className="text-white text-sm font-medium tracking-wide">{image.title}</p>
                         </div>
-                        {!loadedImages.has(image.id) && (
-                          <div className="absolute inset-0 bg-stone-200 animate-pulse" style={{ minHeight: '200px' }} />
-                        )}
                       </div>
                     </motion.div>
                   );

@@ -4,6 +4,7 @@ export interface ProjectImage {
   title: string;
   link?: string;
   mediaType?: 'image' | 'video';
+  thumbnail?: string;
 }
 
 export interface Category {

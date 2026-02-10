@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-thumbs": "node scripts/generate-thumbnails.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

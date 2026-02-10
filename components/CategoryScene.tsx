@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Category } from '../types';
 import { ArrowUpRight } from 'lucide-react';
+import OptimizedImage from './OptimizedImage';
 
 interface CategorySceneProps {
   category: Category;
@@ -135,11 +136,10 @@ const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject, 
                         className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
                       />
                     ) : (
-                      <img
+                      <OptimizedImage
                         src={img.url}
+                        thumbnail={img.thumbnail}
                         alt={img.title}
-                        loading="lazy"
-                        decoding="async"
                         className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
                       />
                     )}
@@ -171,13 +171,14 @@ const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject, 
                 className="absolute inset-0 w-full h-full object-contain"
               />
             ) : (
-              <img
+              <OptimizedImage
                 key={heroMedia[heroIndex]?.url}
                 src={heroMedia[heroIndex]?.url}
+                thumbnail={category.gallery[heroIndex]?.thumbnail}
                 alt={category.title}
-                loading="lazy"
-                decoding="async"
                 className="absolute inset-0 w-full h-full object-contain transition-opacity duration-700"
+                rootMargin="500px"
+                objectFit="contain"
               />
             )}
             {/* Overlay Gradient */}
