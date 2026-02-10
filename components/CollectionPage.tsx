@@ -130,6 +130,58 @@ const CollectionPage: React.FC<CollectionPageProps> = ({
     document.body.style.overflow = 'unset';
   };
 
+  // Swipe gesture for mobile/tablet collection navigation
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    setSwipeDirection(null);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const dx = e.touches[0].clientX - touchStartRef.current.x;
+    const dy = e.touches[0].clientY - touchStartRef.current.y;
+    // Only treat as swipe if horizontal movement is dominant
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      setSwipeDirection(dx > 0 ? 'right' : 'left');
+    } else {
+      setSwipeDirection(null);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+    setSwipeDirection(null);
+
+    // Require 80px horizontal swipe, and horizontal must dominate vertical
+    if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx > 0 && previousCategory && onNavigateCollection) {
+        onNavigateCollection(previousCategory);
+      } else if (dx < 0 && nextCategory && onNavigateCollection) {
+        onNavigateCollection(nextCategory);
+      }
+    }
+  };
+
+  // Keyboard arrow navigation for desktop/laptop
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (overlayCategory) return; // don't navigate when slideshow is open
+      if (e.key === 'ArrowLeft' && previousCategory && onNavigateCollection) {
+        onNavigateCollection(previousCategory);
+      } else if (e.key === 'ArrowRight' && nextCategory && onNavigateCollection) {
+        onNavigateCollection(nextCategory);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [previousCategory, nextCategory, onNavigateCollection, overlayCategory]);
+
   const gap = columnCount <= 2 ? 10 : 16;
 
   return (
@@ -140,7 +192,21 @@ const CollectionPage: React.FC<CollectionPageProps> = ({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.4 }}
         className="relative z-10 min-h-screen bg-stone-50"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
+        {/* Swipe edge indicators */}
+        {swipeDirection === 'right' && previousCategory && (
+          <div className="fixed left-0 top-1/2 -translate-y-1/2 z-50 bg-accent/90 text-white px-4 py-3 rounded-r-xl shadow-lg animate-pulse pointer-events-none">
+            <p className="text-xs uppercase tracking-wider font-semibold">← {previousCategory.title}</p>
+          </div>
+        )}
+        {swipeDirection === 'left' && nextCategory && (
+          <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50 bg-accent/90 text-white px-4 py-3 rounded-l-xl shadow-lg animate-pulse pointer-events-none">
+            <p className="text-xs uppercase tracking-wider font-semibold">{nextCategory.title} →</p>
+          </div>
+        )}
         {/* Sticky Header */}
         <div className="sticky top-0 z-40 bg-stone-50/80 backdrop-blur-lg border-b border-stone-200/60">
           <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center gap-6">

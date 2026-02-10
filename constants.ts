@@ -111,6 +111,19 @@ const letterheadGallery = createImageGallery(letterheadModules, {
 
 const letterheadHeroImage = letterheadGallery[0]?.url ?? '';
 
+// Casual designs & doodles assets
+const casualModules = import.meta.glob(
+  './assets/only graphics/*.{png,jpg,jpeg,webp}',
+  { eager: true }
+) as Record<string, { default: string }>;
+
+const casualGallery = createImageGallery(casualModules, {
+  idPrefix: 'casual',
+  titlePrefix: 'Casual Design',
+});
+
+const casualHeroImage = casualGallery[0]?.url ?? '';
+
 // UI/UX & Website development assets (images + videos)
 const websiteModules = import.meta.glob(
   './assets/websites/*.{png,jpg,jpeg,webp,mp4}',
@@ -220,12 +233,9 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: 'classroom-visual',
-    title: 'Classroom Visual Design',
-    description: 'Educational aids and environmental graphics that enhance learning.',
-    heroImage: 'https://picsum.photos/seed/classroomhero/1400/1000',
-    gallery: [
-      { id: 'cv1', title: 'Alphabet Wall Chart', url: 'https://picsum.photos/seed/class1/1000/1400' },
-      { id: 'cv2', title: 'Periodic Table Redesign', url: 'https://picsum.photos/seed/class2/1000/1400' },
-    ]
+    title: 'Casual Designs & Doodles',
+    description: 'Playful illustrations, sketches, and experimental compositions.',
+    heroImage: casualHeroImage,
+    gallery: casualGallery,
   },
 ];

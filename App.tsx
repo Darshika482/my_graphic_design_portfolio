@@ -7,6 +7,7 @@ import WorkSection from './components/WorkSection';
 import About from './components/About';
 import Contact from './components/Contact';
 import CollectionPage from './components/CollectionPage';
+import CustomCursor from './components/CustomCursor';
 import { Category } from './types';
 import { CATEGORIES } from './constants';
 
@@ -56,6 +57,7 @@ const App: React.FC = () => {
 
   return (
     <main className="relative w-full min-h-screen bg-stone-50 text-stone-900 selection:bg-accent selection:text-white">
+      <CustomCursor />
       <ThreeBackground />
       {!activeCollection && <Navbar isOverlayOpen={isOverlayOpen} />}
 
