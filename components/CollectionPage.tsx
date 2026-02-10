@@ -91,6 +91,8 @@ const CollectionPage: React.FC<CollectionPageProps> = ({ category, onBack }) => 
                   <img
                     src={image.url}
                     alt={image.title}
+                    loading="lazy"
+                    decoding="async"
                     onLoad={() => handleImageLoad(image.id)}
                     className={`w-full h-auto block transition-all duration-500 ease-out group-hover:scale-[1.03] ${loadedImages.has(image.id) ? 'opacity-100' : 'opacity-0'
                       }`}

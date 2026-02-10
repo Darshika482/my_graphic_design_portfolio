@@ -73,7 +73,7 @@ const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject, 
                   onClick={() => onOpenProject(category, idx)}
                   className="aspect-square bg-stone-200 overflow-hidden cursor-pointer"
                 >
-                  <img src={img.url} alt={img.title} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
+                  <img src={img.url} alt={img.title} loading="lazy" decoding="async" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
                 </motion.div>
               ))}
             </div>
@@ -84,7 +84,7 @@ const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject, 
         <div className="w-full md:w-2/3 relative order-1 md:order-2">
           <motion.div
             style={{ y: yHero }}
-            className="w-full bg-stone-100 shadow-2xl overflow-hidden cursor-pointer flex items-center justify-center max-h-[85vh]"
+            className="relative w-full h-[70vh] bg-stone-100 shadow-2xl overflow-hidden cursor-pointer"
             onClick={() => onOpenProject(category, -1)}
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.5 }}
@@ -93,7 +93,9 @@ const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject, 
               key={heroIndex}
               src={heroImages[heroIndex]}
               alt={category.title}
-              className="max-w-full max-h-[85vh] w-auto h-auto object-contain transition-opacity duration-700"
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 w-full h-full object-contain transition-opacity duration-700"
             />
             {/* Overlay Gradient */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
