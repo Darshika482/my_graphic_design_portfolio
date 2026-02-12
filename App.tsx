@@ -8,6 +8,7 @@ import About from './components/About';
 import Contact from './components/Contact';
 import CollectionPage from './components/CollectionPage';
 import CustomCursor from './components/CustomCursor';
+import Admin from './components/admin/Admin';
 import { Category } from './types';
 import { CATEGORIES } from './constants';
 import { useImageProtection } from './hooks/useImageProtection';
@@ -19,9 +20,21 @@ const App: React.FC = () => {
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [activeCollection, setActiveCollection] = useState<Category | null>(null);
 
-  // Resolve hash to a collection category
+  // Check if admin route
+  const [isAdminRoute, setIsAdminRoute] = useState(false);
+
+  // Resolve hash to a collection category or admin route
   const resolveHash = useCallback(() => {
     const hash = window.location.hash;
+    
+    // Check for admin routes
+    if (hash.includes('/admin')) {
+      setIsAdminRoute(true);
+      setActiveCollection(null);
+      return;
+    }
+    
+    setIsAdminRoute(false);
     const match = hash.match(/^#\/collection\/(.+)$/);
     if (match) {
       const cat = CATEGORIES.find(c => c.id === match[1]);
@@ -89,6 +102,11 @@ const App: React.FC = () => {
     currentIndex >= 0 && currentIndex < CATEGORIES.length - 1
       ? CATEGORIES[currentIndex + 1]
       : null;
+
+  // Render admin panel if on admin route
+  if (isAdminRoute) {
+    return <Admin />;
+  }
 
   return (
     <main className="relative w-full min-h-screen bg-stone-50 text-stone-900 selection:bg-accent selection:text-white">

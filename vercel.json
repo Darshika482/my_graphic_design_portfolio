@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/upload-to-github.ts": {
+      "maxDuration": 30
+    }
+  }
+}
