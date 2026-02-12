@@ -137,9 +137,18 @@ const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex,
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!imageContainerRef.current || isVideo) return;
 
-    if (e.touches.length === 1 && lastTouchRef.current && zoomScale > 1.01) {
-      // Panning when zoomed
+    // Prevent the page from scrolling while panning/zooming
+    e.preventDefault();
+
+    if (e.touches.length === 1 && zoomScale > 1.01) {
+      // Start panning if this is the first single-touch move after a pinch
       const touch = e.touches[0];
+      if (!lastTouchRef.current) {
+        lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+        return;
+      }
+
+      // Panning when zoomed
       const dx = touch.clientX - lastTouchRef.current.x;
       const dy = touch.clientY - lastTouchRef.current.y;
       lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
@@ -209,11 +218,6 @@ const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex,
             onTouchEnd={handleTouchEnd}
             style={{
               touchAction: 'none',
-              // When zoomed via touch, apply panning transforms on the container
-              transform:
-                zoomScale > 1.01
-                  ? `translate3d(${offset.x}px, ${offset.y}px, 0)`
-                  : 'translate3d(0, 0, 0)',
             }}
           >
             {isVideo ? (
@@ -231,7 +235,10 @@ const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex,
                   userSelect: 'none',
                   WebkitUserSelect: 'none',
                   WebkitUserDrag: 'none',
-                  transform: `scale(${zoomScale})`,
+                  transform:
+                    zoomScale > 1.01
+                      ? `translate3d(${offset.x}px, ${offset.y}px, 0) scale(${zoomScale})`
+                      : 'scale(1)',
                   transformOrigin: zoomOrigin,
                 }}
               />
@@ -252,7 +259,10 @@ const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex,
                   onSelectStart={(e) => e.preventDefault()}
                   className="max-w-full max-h-full object-contain shadow-2xl transition-transform duration-300 ease-out md:pointer-events-auto select-none"
                   style={{
-                    transform: `scale(${zoomScale})`,
+                    transform:
+                      zoomScale > 1.01
+                        ? `translate3d(${offset.x}px, ${offset.y}px, 0) scale(${zoomScale})`
+                        : 'scale(1)',
                     transformOrigin: zoomOrigin,
                     userSelect: 'none',
                     WebkitUserSelect: 'none',
