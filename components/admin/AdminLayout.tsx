@@ -47,6 +47,23 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage, onLogo
         body: JSON.stringify({ password }),
       });
 
+      // If API is not available (local dev), fall back to client-side check
+      if (!response.ok && response.status === 404) {
+        // Fallback for local development
+        const correctPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'Darshika97550';
+        if (password === correctPassword) {
+          setIsAuthenticated(true);
+          sessionStorage.setItem('admin_authenticated', 'true');
+          setError('');
+          setIsLoading(false);
+          return;
+        } else {
+          setError('Incorrect password');
+          setIsLoading(false);
+          return;
+        }
+      }
+
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -54,10 +71,18 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage, onLogo
         sessionStorage.setItem('admin_authenticated', 'true');
         setError('');
       } else {
-        setError('Incorrect password');
+        setError(data.error || 'Incorrect password');
       }
     } catch (error) {
-      setError('Login failed. Please try again.');
+      // Fallback for local development when API route doesn't exist
+      const correctPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'Darshika97550';
+      if (password === correctPassword) {
+        setIsAuthenticated(true);
+        sessionStorage.setItem('admin_authenticated', 'true');
+        setError('');
+      } else {
+        setError('Incorrect password');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -87,9 +112,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage, onLogo
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-              disabled={!password}
               placeholder="Password"
               className="w-full p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+              autoFocus
             />
             
             {error && <p className="text-red-600 text-sm">{error}</p>}

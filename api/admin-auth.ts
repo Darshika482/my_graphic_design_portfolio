@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+// Support both ADMIN_PASSWORD (production) and VITE_ADMIN_PASSWORD (local dev fallback)
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.VITE_ADMIN_PASSWORD || 'Darshika97550';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

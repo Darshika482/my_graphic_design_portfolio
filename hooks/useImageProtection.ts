@@ -12,8 +12,7 @@ export const useImageProtection = () => {
       if (
         target.tagName === 'IMG' ||
         target.tagName === 'VIDEO' ||
-        target.closest('img') ||
-        target.closest('video')
+        (target.closest && (target.closest('img') || target.closest('video')))
       ) {
         e.preventDefault();
         e.stopPropagation();
@@ -27,8 +26,7 @@ export const useImageProtection = () => {
       if (
         target.tagName === 'IMG' ||
         target.tagName === 'VIDEO' ||
-        target.closest('img') ||
-        target.closest('video')
+        (target.closest && (target.closest('img') || target.closest('video')))
       ) {
         e.preventDefault();
         e.stopPropagation();
@@ -72,14 +70,25 @@ export const useImageProtection = () => {
       }
     };
 
-    // Prevent image selection
+    // Prevent image selection (but allow input fields)
     const handleSelectStart = (e: Event) => {
       const target = e.target as HTMLElement;
+      
+      // Allow selection in input fields, textareas, and other form elements
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable ||
+        (target.closest && (target.closest('input') || target.closest('textarea')))
+      ) {
+        return; // Allow normal text selection in form fields
+      }
+      
+      // Only prevent selection on images and videos
       if (
         target.tagName === 'IMG' ||
         target.tagName === 'VIDEO' ||
-        target.closest('img') ||
-        target.closest('video')
+        (target.closest && (target.closest('img') || target.closest('video')))
       ) {
         e.preventDefault();
         e.stopPropagation();
@@ -93,8 +102,7 @@ export const useImageProtection = () => {
       if (
         target.tagName === 'IMG' ||
         target.tagName === 'VIDEO' ||
-        target.closest('img') ||
-        target.closest('video')
+        (target.closest && (target.closest('img') || target.closest('video')))
       ) {
         e.preventDefault();
         e.stopPropagation();
