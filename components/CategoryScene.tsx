@@ -141,6 +141,7 @@ const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject, 
                         thumbnail={img.thumbnail}
                         alt={img.title}
                         className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
+                        eager
                       />
                     )}
                   </motion.div>
@@ -179,6 +180,7 @@ const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject, 
                 className="absolute inset-0 w-full h-full object-contain transition-opacity duration-700"
                 rootMargin="500px"
                 objectFit="contain"
+                eager
               />
             )}
             {/* Overlay Gradient */}

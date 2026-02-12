@@ -273,6 +273,7 @@ const CollectionPage: React.FC<CollectionPageProps> = ({
                             thumbnail={image.thumbnail}
                             alt={image.title}
                             className={`w-full h-full object-cover block transition-all duration-500 ease-out group-hover:scale-[1.03]`}
+                            rootMargin="400px"
                           />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />

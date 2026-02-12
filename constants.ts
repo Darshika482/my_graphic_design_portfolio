@@ -93,8 +93,9 @@ const studentPlannerModules = import.meta.glob(
   { eager: true }
 ) as Record<string, { default: string }>;
 
+// NOTE: Folder name uses a typographic apostrophe (’), so the glob must match it exactly.
 const maxSpaceModules = import.meta.glob(
-  "./assets/books/Max's Space Journey/*.{png,jpg,jpeg,webp}",
+  './assets/books/Max’s Space Journey/*.{png,jpg,jpeg,webp}',
   { eager: true }
 ) as Record<string, { default: string }>;
 

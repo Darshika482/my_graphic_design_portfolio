@@ -55,6 +55,16 @@ interface OptimizedImageProps {
     rootMargin?: string;
     /** Controls how images fit their container. Default: 'cover'. Use 'contain' to prevent cropping. */
     objectFit?: 'cover' | 'contain';
+    /**
+     * If true, skip intersection observer and load the full image immediately.
+     * Use this for above-the-fold / hero images you want to show as fast as possible.
+     */
+    eager?: boolean;
+    /**
+     * If true, don't show the blurred thumbnail, only the skeleton.
+     * This reduces the visual "blur" effect duration.
+     */
+    disableBlur?: boolean;
 }
 
 const OptimizedImage: React.FC<OptimizedImageProps> = ({
@@ -65,14 +75,18 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     onClick,
     rootMargin = '300px',
     objectFit = 'cover',
+    eager = false,
+    disableBlur = false,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [isInView, setIsInView] = useState(false);
-    const [isFullLoaded, setIsFullLoaded] = useState(() => imageCache.has(src));
+    // For eager images or cached ones, treat them as "in view" from the start
+    const [isInView, setIsInView] = useState(() => eager || imageCache.has(src));
+    const [isFullLoaded, setIsFullLoaded] = useState(() => eager || imageCache.has(src));
 
     // Intersection Observer — triggers when element nears viewport
     useEffect(() => {
-        if (isFullLoaded) return; // already cached, no need to observe
+        // For eager images or already loaded ones, we don't need the observer at all
+        if (eager || isFullLoaded) return;
 
         const el = containerRef.current;
         if (!el) return;
@@ -89,9 +103,9 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
         observer.observe(el);
         return () => observer.disconnect();
-    }, [rootMargin, isFullLoaded]);
+    }, [rootMargin, isFullLoaded, eager]);
 
-    // Load full image once in view (or if already cached)
+    // Load full image once in view (or if already cached / eager)
     useEffect(() => {
         if (!isInView && !imageCache.has(src)) return;
 
@@ -103,13 +117,14 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     return (
         <div ref={containerRef} className={`relative overflow-hidden ${className}`} onClick={onClick}>
             {/* Blurred thumbnail placeholder */}
-            {thumbnail && !isFullLoaded && (
+            {thumbnail && !isFullLoaded && !disableBlur && (
                 <img
                     src={thumbnail}
                     alt=""
                     aria-hidden
                     className={`absolute inset-0 w-full h-full ${objectFit === 'contain' ? 'object-contain' : 'object-cover'}`}
-                    style={{ filter: 'blur(20px)', transform: 'scale(1.1)' }}
+                    // Softer, lighter blur so it feels less "muddy" while loading
+                    style={{ filter: 'blur(8px)', transform: 'scale(1.05)' }}
                 />
             )}
 
@@ -118,7 +133,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
                 <img
                     src={src}
                     alt={alt}
-                    loading="lazy"
+                    loading={eager ? 'eager' : 'lazy'}
                     decoding="async"
                     className={`w-full h-full ${objectFit === 'contain' ? 'object-contain' : 'object-cover'} block transition-opacity duration-500 ease-out ${isFullLoaded ? 'opacity-100' : 'opacity-0'
                         }`}
