@@ -12,9 +12,22 @@ interface ProjectOverlayProps {
 const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex, onClose }) => {
   const [currentIndex, setCurrentIndex] = React.useState(initialIndex);
 
-  // Professional zoom (desktop): click to toggle zoom, cursor sets zoom origin
-  const [isZoomed, setIsZoomed] = React.useState(false);
+  // Unified zoom state for both desktop and touch
+  const [zoomScale, setZoomScale] = React.useState(1);
   const [zoomOrigin, setZoomOrigin] = React.useState('50% 50%');
+
+  // Panning state (mainly for touch / when zoomed)
+  const [offset, setOffset] = React.useState({ x: 0, y: 0 });
+  const lastTouchRef = React.useRef<{ x: number; y: number } | null>(null);
+
+  // Pinch-zoom state for touch
+  const pinchRef = React.useRef<{
+    distance: number;
+    scale: number;
+    centerX: number;
+    centerY: number;
+  } | null>(null);
+
   const imageContainerRef = React.useRef<HTMLDivElement | null>(null);
 
   // Use only gallery images for the slideshow (no separate hero slide)
@@ -25,14 +38,27 @@ const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex,
     !!current &&
     (current.mediaType === 'video' || /\.mp4$/i.test(current.url));
 
+  const resetZoom = () => {
+    setZoomScale(1);
+    setOffset({ x: 0, y: 0 });
+    pinchRef.current = null;
+    lastTouchRef.current = null;
+  };
+
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (currentIndex < allImages.length - 1) setCurrentIndex(prev => prev + 1);
+    if (currentIndex < allImages.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      resetZoom();
+    }
   };
 
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (currentIndex > 0) setCurrentIndex(prev => prev - 1);
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+      resetZoom();
+    }
   };
 
   useEffect(() => {
@@ -44,6 +70,110 @@ const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex,
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [allImages.length, onClose]);
+
+  // Desktop click-to-zoom (kept separate from touch pinch behaviour)
+  const handleDesktopToggleZoom = (e: React.MouseEvent) => {
+    if (isVideo || !imageContainerRef.current) return;
+    e.stopPropagation();
+
+    // If already zoomed in, reset completely
+    if (zoomScale > 1.01) {
+      resetZoom();
+      return;
+    }
+
+    const rect = imageContainerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const xPercent = (x / rect.width) * 100;
+    const yPercent = (y / rect.height) * 100;
+
+    setZoomOrigin(`${xPercent}% ${yPercent}%`);
+    setZoomScale(1.6);
+  };
+
+  // Desktop mouse move updates zoom origin
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!imageContainerRef.current || zoomScale <= 1.01 || isVideo) return;
+
+    const rect = imageContainerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const xPercent = (x / rect.width) * 100;
+    const yPercent = (y / rect.height) * 100;
+
+    setZoomOrigin(`${xPercent}% ${yPercent}%`);
+  };
+
+  // Touch handlers for phone-like gallery experience
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!imageContainerRef.current || isVideo) return;
+
+    if (e.touches.length === 1) {
+      // Start panning
+      const touch = e.touches[0];
+      lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+    } else if (e.touches.length === 2) {
+      // Start pinch
+      const [t1, t2] = [e.touches[0], e.touches[1]];
+      const dx = t2.clientX - t1.clientX;
+      const dy = t2.clientY - t1.clientY;
+      const distance = Math.hypot(dx, dy);
+      const centerX = (t1.clientX + t2.clientX) / 2;
+      const centerY = (t1.clientY + t2.clientY) / 2;
+      pinchRef.current = { distance, scale: zoomScale, centerX, centerY };
+
+      // Also set zoom origin around pinch center
+      const rect = imageContainerRef.current.getBoundingClientRect();
+      const x = centerX - rect.left;
+      const y = centerY - rect.top;
+      const xPercent = (x / rect.width) * 100;
+      const yPercent = (y / rect.height) * 100;
+      setZoomOrigin(`${xPercent}% ${yPercent}%`);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!imageContainerRef.current || isVideo) return;
+
+    if (e.touches.length === 1 && lastTouchRef.current && zoomScale > 1.01) {
+      // Panning when zoomed
+      const touch = e.touches[0];
+      const dx = touch.clientX - lastTouchRef.current.x;
+      const dy = touch.clientY - lastTouchRef.current.y;
+      lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+
+      setOffset(prev => ({
+        x: prev.x + dx,
+        y: prev.y + dy,
+      }));
+    } else if (e.touches.length === 2 && pinchRef.current) {
+      // Pinch zoom
+      const [t1, t2] = [e.touches[0], e.touches[1]];
+      const dx = t2.clientX - t1.clientX;
+      const dy = t2.clientY - t1.clientY;
+      const distance = Math.hypot(dx, dy);
+
+      const rawScale = (distance / pinchRef.current.distance) * pinchRef.current.scale;
+      const clampedScale = Math.min(3, Math.max(1, rawScale));
+      setZoomScale(clampedScale);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!imageContainerRef.current || isVideo) return;
+
+    if (e.touches.length === 0) {
+      lastTouchRef.current = null;
+      pinchRef.current = null;
+
+      // If user has zoomed out very close to 1, snap back to 1
+      if (zoomScale < 1.05) {
+        resetZoom();
+      }
+    }
+  };
 
   if (!category) return null;
 
@@ -70,24 +200,20 @@ const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex,
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4 }}
-            className="relative w-full h-[80vh] flex items-center justify-center cursor-zoom-in md:cursor-zoom-in"
+            className="relative w-full h-[80vh] flex items-center justify-center cursor-zoom-in md:cursor-zoom-in touch-none"
             ref={imageContainerRef}
-            onClick={(e) => {
-              if (isVideo) return;
-              e.stopPropagation();
-              setIsZoomed((prev) => !prev);
-            }}
-            onMouseMove={(e) => {
-              if (!imageContainerRef.current || !isZoomed || isVideo) return;
-
-              const rect = imageContainerRef.current.getBoundingClientRect();
-              const x = e.clientX - rect.left;
-              const y = e.clientY - rect.top;
-
-              const xPercent = (x / rect.width) * 100;
-              const yPercent = (y / rect.height) * 100;
-
-              setZoomOrigin(`${xPercent}% ${yPercent}%`);
+            onClick={handleDesktopToggleZoom}
+            onMouseMove={handleMouseMove}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{
+              touchAction: 'none',
+              // When zoomed via touch, apply panning transforms on the container
+              transform:
+                zoomScale > 1.01
+                  ? `translate3d(${offset.x}px, ${offset.y}px, 0)`
+                  : 'translate3d(0, 0, 0)',
             }}
           >
             {isVideo ? (
@@ -96,7 +222,18 @@ const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex,
                 controls
                 autoPlay
                 playsInline
-                className="max-w-full max-h-full object-contain shadow-2xl"
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
+                onSelectStart={(e) => e.preventDefault()}
+                className="max-w-full max-h-full object-contain shadow-2xl select-none"
+                style={{
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  WebkitUserDrag: 'none',
+                  transform: `scale(${zoomScale})`,
+                  transformOrigin: zoomOrigin,
+                }}
               />
             ) : (
               <>
@@ -109,10 +246,17 @@ const ProjectOverlay: React.FC<ProjectOverlayProps> = ({ category, initialIndex,
                 <img
                   src={current?.url}
                   alt={current?.title}
-                  className="max-w-full max-h-full object-contain shadow-2xl transition-transform duration-300 ease-out md:pointer-events-auto"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                  onSelectStart={(e) => e.preventDefault()}
+                  className="max-w-full max-h-full object-contain shadow-2xl transition-transform duration-300 ease-out md:pointer-events-auto select-none"
                   style={{
-                    transform: isZoomed ? 'scale(1.6)' : 'scale(1)',
+                    transform: `scale(${zoomScale})`,
                     transformOrigin: zoomOrigin,
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    WebkitUserDrag: 'none',
                   }}
                 />
               </>

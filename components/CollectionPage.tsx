@@ -261,8 +261,13 @@ const CollectionPage: React.FC<CollectionPageProps> = ({
                             loop
                             autoPlay
                             playsInline
-                            className={`w-full h-full object-cover block transition-all duration-500 ease-out group-hover:scale-[1.03] ${loadedImages.has(image.id) ? 'opacity-100' : 'opacity-0'
+                            draggable={false}
+                            onContextMenu={(e) => e.preventDefault()}
+                            onDragStart={(e) => e.preventDefault()}
+                            onSelectStart={(e) => e.preventDefault()}
+                            className={`w-full h-full object-cover block transition-all duration-500 ease-out group-hover:scale-[1.03] select-none ${loadedImages.has(image.id) ? 'opacity-100' : 'opacity-0'
                               }`}
+                            style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitUserDrag: 'none' }}
                             onLoadedMetadata={() => {
                               setLoadedImages(prev => new Set(prev).add(image.id));
                             }}

@@ -10,8 +10,12 @@ import CollectionPage from './components/CollectionPage';
 import CustomCursor from './components/CustomCursor';
 import { Category } from './types';
 import { CATEGORIES } from './constants';
+import { useImageProtection } from './hooks/useImageProtection';
 
 const App: React.FC = () => {
+  // Enable image protection globally
+  useImageProtection();
+  
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [activeCollection, setActiveCollection] = useState<Category | null>(null);
 
@@ -33,6 +37,37 @@ const App: React.FC = () => {
     window.addEventListener('hashchange', resolveHash);
     return () => window.removeEventListener('hashchange', resolveHash);
   }, [resolveHash]);
+
+  // Add global CSS for image protection
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      img, video {
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        user-select: none !important;
+        -webkit-user-drag: none !important;
+        -khtml-user-drag: none !important;
+        -moz-user-drag: none !important;
+        -o-user-drag: none !important;
+        user-drag: none !important;
+        pointer-events: auto !important;
+      }
+      
+      img::selection, video::selection {
+        background: transparent !important;
+      }
+      
+      img::-moz-selection, video::-moz-selection {
+        background: transparent !important;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   const handleViewCollection = (category: Category) => {
     window.location.hash = `/collection/${category.id}`;

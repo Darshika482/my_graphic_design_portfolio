@@ -122,9 +122,12 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
                     src={thumbnail}
                     alt=""
                     aria-hidden
-                    className={`absolute inset-0 w-full h-full ${objectFit === 'contain' ? 'object-contain' : 'object-cover'}`}
-                    // Softer, lighter blur so it feels less "muddy" while loading
-                    style={{ filter: 'blur(8px)', transform: 'scale(1.05)' }}
+                    draggable={false}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    onSelectStart={(e) => e.preventDefault()}
+                    className={`absolute inset-0 w-full h-full ${objectFit === 'contain' ? 'object-contain' : 'object-cover'} select-none`}
+                    style={{ filter: 'blur(8px)', transform: 'scale(1.05)', userSelect: 'none', WebkitUserSelect: 'none', WebkitUserDrag: 'none' }}
                 />
             )}
 
@@ -135,8 +138,13 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
                     alt={alt}
                     loading={eager ? 'eager' : 'lazy'}
                     decoding="async"
-                    className={`w-full h-full ${objectFit === 'contain' ? 'object-contain' : 'object-cover'} block transition-opacity duration-500 ease-out ${isFullLoaded ? 'opacity-100' : 'opacity-0'
+                    draggable={false}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    onSelectStart={(e) => e.preventDefault()}
+                    className={`w-full h-full ${objectFit === 'contain' ? 'object-contain' : 'object-cover'} block transition-opacity duration-500 ease-out select-none ${isFullLoaded ? 'opacity-100' : 'opacity-0'
                         }`}
+                    style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitUserDrag: 'none' }}
                     onLoad={() => {
                         imageCache.set(src, src);
                         setIsFullLoaded(true);

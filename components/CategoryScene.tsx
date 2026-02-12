@@ -133,7 +133,12 @@ const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject, 
                         loop
                         autoPlay
                         playsInline
-                        className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
+                        draggable={false}
+                        onContextMenu={(e) => e.preventDefault()}
+                        onDragStart={(e) => e.preventDefault()}
+                        onSelectStart={(e) => e.preventDefault()}
+                        className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500 select-none"
+                        style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitUserDrag: 'none' }}
                       />
                     ) : (
                       <OptimizedImage
@@ -169,7 +174,12 @@ const CategoryScene: React.FC<CategorySceneProps> = ({ category, onOpenProject, 
                 loop
                 autoPlay
                 playsInline
-                className="absolute inset-0 w-full h-full object-contain"
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
+                onSelectStart={(e) => e.preventDefault()}
+                className="absolute inset-0 w-full h-full object-contain select-none"
+                style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitUserDrag: 'none' }}
               />
             ) : (
               <OptimizedImage
