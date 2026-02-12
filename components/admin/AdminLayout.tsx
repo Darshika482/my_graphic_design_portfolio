@@ -21,6 +21,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage, onLogo
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // Check if already authenticated
@@ -30,13 +31,35 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage, onLogo
     }
   }, []);
 
-  const handleLogin = () => {
-    if (password === import.meta.env.VITE_ADMIN_PASSWORD || password === 'Darshika97550') {
-      setIsAuthenticated(true);
-      sessionStorage.setItem('admin_authenticated', 'true');
-      setError('');
-    } else {
-      setError('Incorrect password');
+  const handleLogin = async () => {
+    if (!password) {
+      setError('Please enter a password');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/admin-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setIsAuthenticated(true);
+        sessionStorage.setItem('admin_authenticated', 'true');
+        setError('');
+      } else {
+        setError('Incorrect password');
+      }
+    } catch (error) {
+      setError('Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -64,6 +87,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage, onLogo
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+              disabled={!password}
               placeholder="Password"
               className="w-full p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
             />
@@ -72,9 +96,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage, onLogo
             
             <button
               onClick={handleLogin}
-              className="w-full p-3 bg-accent text-white rounded-lg hover:bg-opacity-90 transition-colors"
+              disabled={isLoading || !password}
+              className="w-full p-3 bg-accent text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Login
+              {isLoading ? 'Logging in...' : 'Login'}
             </button>
           </div>
         </motion.div>
