@@ -1,26 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Trash2, Edit2, Image as ImageIcon, Search } from 'lucide-react';
+import { Trash2, Edit2, Image as ImageIcon, Search, GripVertical } from 'lucide-react';
 import { CATEGORIES } from '../../constants';
 import { Category } from '../../types';
 import DeleteConfirmModal from './DeleteConfirmModal';
+
+type GalleryImage = {
+  id: string;
+  title: string;
+  url: string;
+  category: string;
+  thumbnail?: string;
+  filePath?: string;
+};
 
 const AdminGallery: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingImage, setEditingImage] = useState<{ id: string; title: string } | null>(null);
-  const [images, setImages] = useState<Array<{ id: string; title: string; url: string; category: string; thumbnail?: string }>>([]);
+  const [images, setImages] = useState<GalleryImage[]>([]);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
-  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; imageId: string; imageTitle: string }>({
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; imageId: string; imageTitle: string; filePath?: string }>({
     isOpen: false,
     imageId: '',
     imageTitle: '',
   });
 
+  // Drag-and-drop state
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+
   useEffect(() => {
-    // Load all images from categories
-    const allImages: Array<{ id: string; title: string; url: string; category: string; thumbnail?: string }> = [];
-    
+    const allImages: GalleryImage[] = [];
     CATEGORIES.forEach(category => {
       category.gallery.forEach(image => {
         allImages.push({
@@ -29,10 +41,10 @@ const AdminGallery: React.FC = () => {
           url: image.url,
           category: category.id,
           thumbnail: image.thumbnail,
+          filePath: image.filePath,
         });
       });
     });
-
     setImages(allImages);
   }, []);
 
@@ -47,35 +59,94 @@ const AdminGallery: React.FC = () => {
     ...CATEGORIES.map(cat => ({ value: cat.id, label: cat.title })),
   ];
 
-  const handleDeleteClick = (imageId: string, imageTitle: string) => {
+  const handleDeleteClick = (image: GalleryImage) => {
     setDeleteModal({
       isOpen: true,
-      imageId,
-      imageTitle,
+      imageId: image.id,
+      imageTitle: image.title,
+      filePath: image.filePath,
     });
   };
 
   const handleDeleteConfirm = async () => {
-    // TODO: Implement delete via API
-    setMessage({ type: 'info', text: 'Delete functionality coming soon. For now, delete files manually from GitHub.' });
-    
-    // Remove from local state (for preview purposes)
-    // setImages(prev => prev.filter(img => img.id !== deleteModal.imageId));
+    const { imageId, filePath } = deleteModal;
+
+    if (!filePath) {
+      setMessage({ type: 'error', text: 'Cannot delete: file path unknown for this image.' });
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch('/api/delete-from-github', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filePath }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Delete failed');
+      }
+
+      setImages(prev => prev.filter(img => img.id !== imageId));
+      setMessage({ type: 'success', text: 'Image deleted from GitHub. It will disappear from the public site after the next deployment.' });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: `Delete failed: ${err.message}` });
+    } finally {
+      setIsDeleting(false);
+      setDeleteModal({ isOpen: false, imageId: '', imageTitle: '' });
+    }
   };
 
-  const handleEdit = (image: { id: string; title: string }) => {
-    setEditingImage(image);
+  const handleEdit = (image: GalleryImage) => {
+    setEditingImage({ id: image.id, title: image.title });
   };
 
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = () => {
     if (!editingImage) return;
-
-    // TODO: Implement update via API
-    setImages(prev => prev.map(img => 
+    setImages(prev => prev.map(img =>
       img.id === editingImage.id ? { ...img, title: editingImage.title } : img
     ));
     setEditingImage(null);
-    setMessage({ type: 'success', text: 'Title updated (local only - API update coming soon)' });
+    setMessage({ type: 'success', text: 'Title updated in this view. To persist the change, rename the file on GitHub.' });
+  };
+
+  // Drag-and-drop handlers
+  const handleDragStart = (id: string) => {
+    setDraggedId(id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    if (id !== draggedId) setDragOverId(id);
+  };
+
+  const handleDrop = (targetId: string) => {
+    if (!draggedId || draggedId === targetId) {
+      setDraggedId(null);
+      setDragOverId(null);
+      return;
+    }
+
+    setImages(prev => {
+      const next = [...prev];
+      const fromIdx = next.findIndex(img => img.id === draggedId);
+      const toIdx = next.findIndex(img => img.id === targetId);
+      if (fromIdx === -1 || toIdx === -1) return prev;
+      const [moved] = next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, moved);
+      return next;
+    });
+
+    setDraggedId(null);
+    setDragOverId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDragOverId(null);
   };
 
   return (
@@ -136,6 +207,14 @@ const AdminGallery: React.FC = () => {
         </div>
       </div>
 
+      {/* Drag hint */}
+      {filteredImages.length > 1 && (
+        <p className="text-xs text-stone-400 flex items-center gap-1">
+          <GripVertical className="w-3 h-3" />
+          Drag cards to reorder within this view
+        </p>
+      )}
+
       {/* Image Grid */}
       {filteredImages.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg border border-stone-200">
@@ -147,16 +226,31 @@ const AdminGallery: React.FC = () => {
           {filteredImages.map((image) => (
             <motion.div
               key={image.id}
+              draggable
+              onDragStart={() => handleDragStart(image.id)}
+              onDragOver={(e) => handleDragOver(e, image.id)}
+              onDrop={() => handleDrop(image.id)}
+              onDragEnd={handleDragEnd}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-lg border border-stone-200 overflow-hidden hover:shadow-lg transition-shadow"
+              className={`bg-white rounded-lg border overflow-hidden transition-all cursor-grab active:cursor-grabbing ${
+                draggedId === image.id
+                  ? 'opacity-40 border-stone-300'
+                  : dragOverId === image.id
+                  ? 'border-accent shadow-lg ring-2 ring-accent/30'
+                  : 'border-stone-200 hover:shadow-lg'
+              }`}
             >
               <div className="relative aspect-square bg-stone-100">
                 <img
                   src={image.url}
                   alt={image.title}
                   className="w-full h-full object-cover"
+                  draggable={false}
                 />
+                <div className="absolute top-2 left-2 p-1 bg-white/80 rounded text-stone-400">
+                  <GripVertical className="w-3 h-3" />
+                </div>
               </div>
               <div className="p-4">
                 {editingImage?.id === image.id ? (
@@ -197,8 +291,9 @@ const AdminGallery: React.FC = () => {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDeleteClick(image.id, image.title)}
-                        className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded text-sm hover:bg-red-100 transition-colors"
+                        onClick={() => handleDeleteClick(image)}
+                        disabled={isDeleting}
+                        className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded text-sm hover:bg-red-100 transition-colors disabled:opacity-50"
                       >
                         <Trash2 className="w-3 h-3" />
                         Delete
@@ -218,8 +313,8 @@ const AdminGallery: React.FC = () => {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className={`p-4 rounded-lg ${
-            message.type === 'success' 
-              ? 'bg-green-50 text-green-800' 
+            message.type === 'success'
+              ? 'bg-green-50 text-green-800'
               : message.type === 'error'
               ? 'bg-red-50 text-red-800'
               : 'bg-blue-50 text-blue-800'
