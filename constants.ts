@@ -34,6 +34,7 @@ function createImageGallery(
         title,
         url: mod.default,
         thumbnail: findThumb(path),
+        filePath: path.replace(/^\.\//, ''),
       };
     });
 }
@@ -82,6 +83,7 @@ const secretBookGallery: ProjectImage[] = Object.entries(secretBookModules)
         : `The Secret of Whispering Woods – Page ${pageNumber - 1}`,
       url: mod.default,
       thumbnail: findThumb(path),
+      filePath: path.replace(/^\.\//, ''),
     };
   });
 
@@ -165,6 +167,7 @@ const websiteGallery: ProjectImage[] = Object.entries(websiteModules)
       url: mod.default,
       mediaType: isVideo ? 'video' : 'image',
       thumbnail: isVideo ? undefined : findThumb(path),
+      filePath: path.replace(/^\.\//, ''),
     };
   });
 
@@ -210,6 +213,7 @@ export const CATEGORIES: Category[] = [
         title: 'The Secret of Whispering Woods – Cover',
         url: secretBookHeroImage,
         thumbnail: secretBookGallery[0]?.thumbnail,
+        filePath: secretBookGallery[0]?.filePath,
       },
       {
         id: 'cb2',
@@ -217,6 +221,7 @@ export const CATEGORIES: Category[] = [
         url: studentPlannerCover,
         link: 'https://drive.google.com/file/d/1DFnwE_HWaMF3SVq-EZoo2w8RdiH2cKET/view?usp=sharing',
         thumbnail: studentPlannerThumb,
+        filePath: studentPlannerEntries[0]?.[0]?.replace(/^\.\//, ''),
       },
       {
         id: 'cb3',
@@ -224,6 +229,7 @@ export const CATEGORIES: Category[] = [
         url: maxSpaceCover,
         link: 'https://drive.google.com/file/d/1AYtKEJ0J2y-5t7p9z5QXlcGtosQViDUo/view?usp=sharing',
         thumbnail: maxSpaceThumb,
+        filePath: maxSpaceEntries[0]?.[0]?.replace(/^\.\//, ''),
       },
       // Then full sequence of Secret of Whispering Woods pages (auto-loaded)
       ...secretBookGallery.slice(1),

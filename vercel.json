@@ -2,6 +2,9 @@
   "functions": {
     "api/upload-to-github.ts": {
       "maxDuration": 30
+    },
+    "api/delete-from-github.ts": {
+      "maxDuration": 15
     }
   }
 }
